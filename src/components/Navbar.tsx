@@ -70,13 +70,12 @@ export default function Navbar({ onStartProject, onNavigate }: NavbarProps) {
     }
   };
 
-  const navLinks = [
+  const navLinks: { label: string; target: string; isPath?: boolean }[] = [
     { label: "Services", target: "services" },
     { label: "Work", target: "work" },
     { label: "Process", target: "process" },
     { label: "Why FENORA", target: "why-choose" },
-    { label: "FAQs", target: "faqs" },
-    { label: "Admin Panel", target: "admin", isPath: true }
+    { label: "FAQs", target: "faqs" }
   ];
 
   return (

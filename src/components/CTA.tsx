@@ -23,6 +23,28 @@ export default function CTA({ onStartProject }: CTAProps) {
   const handleBookCall = (e: React.FormEvent) => {
     e.preventDefault();
     if (!bookingEmail || !selectedSlot) return;
+
+    // Post booking server-side for internal operations visibility
+    fetch("/api/bookings", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        name: bookingEmail.split("@")[0].charAt(0).toUpperCase() + bookingEmail.split("@")[0].slice(1) + " Contact",
+        email: bookingEmail,
+        date: "2026-07-13",
+        timeSlot: selectedSlot,
+        timezone: "Pacific Time",
+        description: "Public Discovery Call request submitted online via FENORA homepage."
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      console.log("Booking synced server-side successfully:", data);
+    })
+    .catch(err => console.error("Failed to sync booking server-side:", err));
+
     setBookingCompleted(true);
     // Auto reset state after some time
     setTimeout(() => {
@@ -30,7 +52,7 @@ export default function CTA({ onStartProject }: CTAProps) {
       setBookingCompleted(false);
       setSelectedSlot(null);
       setBookingEmail("");
-    }, 5000);
+    }, 6000);
   };
 
   const selectedDay = AVAILABLE_DAYS[selectedDayIdx];

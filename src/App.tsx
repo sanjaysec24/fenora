@@ -87,9 +87,7 @@ export default function App() {
     if (currentPath === "/admin") {
       return (
         <div className="bg-background min-h-screen">
-          <Navbar onStartProject={() => handleOpenScoper()} onNavigate={handleNavigate} />
           <AdminDashboard onNavigate={handleNavigate} />
-          <Footer />
         </div>
       );
     }

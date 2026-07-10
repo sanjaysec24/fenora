@@ -4,6 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import multer from "multer";
 import { ProjectsDb } from "./server/projectsDb";
+import { AdminDb } from "./server/adminDb";
 
 async function startServer() {
   const app = express();
@@ -180,6 +181,189 @@ async function startServer() {
     } catch (err: any) {
       console.error("API upload image error:", err);
       res.status(500).json({ error: err.message || "Image upload failed" });
+    }
+  });
+
+  // ==========================================
+  // BLOGS API
+  // ==========================================
+  app.get("/api/blogs", (req, res) => {
+    try {
+      const includeDrafts = req.query.includeDrafts === "true";
+      const list = AdminDb.getAllBlogs();
+      if (includeDrafts) {
+        // Authenticated check
+        const code = req.headers["x-admin-passcode"];
+        if (code === ADMIN_PASSCODE) {
+          return res.json(list);
+        }
+      }
+      res.json(list.filter((b) => b.status === "published"));
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to fetch blogs" });
+    }
+  });
+
+  app.get("/api/blogs/by-slug/:slug", (req, res) => {
+    try {
+      const blog = AdminDb.getBlogBySlug(req.params.slug);
+      if (!blog) return res.status(404).json({ error: "Blog post not found" });
+      res.json(blog);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to fetch blog post" });
+    }
+  });
+
+  app.post("/api/blogs", requireAdmin, (req, res) => {
+    try {
+      const blog = AdminDb.createBlog(req.body);
+      res.status(201).json(blog);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to create blog" });
+    }
+  });
+
+  app.put("/api/blogs/:id", requireAdmin, (req, res) => {
+    try {
+      const blog = AdminDb.updateBlog(req.params.id, req.body);
+      if (!blog) return res.status(404).json({ error: "Blog not found" });
+      res.json(blog);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to update blog" });
+    }
+  });
+
+  app.delete("/api/blogs/:id", requireAdmin, (req, res) => {
+    try {
+      const success = AdminDb.deleteBlog(req.params.id);
+      res.json({ success });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to delete blog" });
+    }
+  });
+
+  // ==========================================
+  // TESTIMONIALS API
+  // ==========================================
+  app.get("/api/testimonials", (req, res) => {
+    try {
+      const includeDrafts = req.query.includeDrafts === "true";
+      const list = AdminDb.getAllTestimonials();
+      if (includeDrafts) {
+        const code = req.headers["x-admin-passcode"];
+        if (code === ADMIN_PASSCODE) {
+          return res.json(list);
+        }
+      }
+      res.json(list.filter((t) => t.status === "published"));
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to fetch testimonials" });
+    }
+  });
+
+  app.post("/api/testimonials", requireAdmin, (req, res) => {
+    try {
+      const test = AdminDb.createTestimonial(req.body);
+      res.status(201).json(test);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to create testimonial" });
+    }
+  });
+
+  app.put("/api/testimonials/:id", requireAdmin, (req, res) => {
+    try {
+      const test = AdminDb.updateTestimonial(req.params.id, req.body);
+      if (!test) return res.status(404).json({ error: "Testimonial not found" });
+      res.json(test);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to update testimonial" });
+    }
+  });
+
+  app.delete("/api/testimonials/:id", requireAdmin, (req, res) => {
+    try {
+      const success = AdminDb.deleteTestimonial(req.params.id);
+      res.json({ success });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to delete testimonial" });
+    }
+  });
+
+  // ==========================================
+  // LEADS API
+  // ==========================================
+  app.get("/api/leads", requireAdmin, (req, res) => {
+    try {
+      res.json(AdminDb.getAllLeads());
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to fetch leads" });
+    }
+  });
+
+  app.post("/api/leads", (req, res) => {
+    try {
+      const lead = AdminDb.createLead(req.body);
+      res.status(201).json(lead);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to submit lead" });
+    }
+  });
+
+  app.put("/api/leads/:id/status", requireAdmin, (req, res) => {
+    try {
+      const lead = AdminDb.updateLeadStatus(req.params.id, req.body.status);
+      if (!lead) return res.status(404).json({ error: "Lead not found" });
+      res.json(lead);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to update lead status" });
+    }
+  });
+
+  app.delete("/api/leads/:id", requireAdmin, (req, res) => {
+    try {
+      const success = AdminDb.deleteLead(req.params.id);
+      res.json({ success });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to delete lead" });
+    }
+  });
+
+  // ==========================================
+  // BOOKINGS API
+  // ==========================================
+  app.get("/api/bookings", requireAdmin, (req, res) => {
+    try {
+      res.json(AdminDb.getAllBookings());
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to fetch bookings" });
+    }
+  });
+
+  app.post("/api/bookings", (req, res) => {
+    try {
+      const booking = AdminDb.createBooking(req.body);
+      res.status(201).json(booking);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to submit booking" });
+    }
+  });
+
+  app.put("/api/bookings/:id/status", requireAdmin, (req, res) => {
+    try {
+      const booking = AdminDb.updateBookingStatus(req.params.id, req.body.status);
+      if (!booking) return res.status(404).json({ error: "Booking not found" });
+      res.json(booking);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to update booking status" });
+    }
+  });
+
+  app.delete("/api/bookings/:id", requireAdmin, (req, res) => {
+    try {
+      const success = AdminDb.deleteBooking(req.params.id);
+      res.json({ success });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || "Failed to delete booking" });
     }
   });
 

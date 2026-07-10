@@ -135,6 +135,25 @@ export default function ProjectScoper({ isOpen, onClose, preselectedServiceId }:
     setSavedScopes(updated);
     localStorage.setItem("fenora_scopes", JSON.stringify(updated));
     setSubmittedScope(newScope);
+
+    // Sync to server-side Lead database
+    fetch("/api/leads", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        service: serviceLabel,
+        budget: budgetLabel,
+        timeline: timelineLabel,
+        description: projectDescription,
+        email: userEmail,
+        phone: userPhone,
+        estimatedEffort,
+        recommendedStack
+      })
+    }).catch(err => console.error("Failed to sync lead server-side:", err));
+
     setStep(5);
   };
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Star, ChevronLeft, ChevronRight, MessageSquareQuote, ShieldCheck } from "lucide-react";
 
@@ -40,16 +40,31 @@ const TESTIMONIALS = [
 
 export default function Testimonials() {
   const [activeIdx, setActiveIdx] = useState(0);
+  const [items, setItems] = useState(TESTIMONIALS);
+
+  useEffect(() => {
+    fetch("/api/testimonials")
+      .then((res) => {
+        if (!res.ok) throw new Error();
+        return res.json();
+      })
+      .then((data) => {
+        if (data && data.length > 0) {
+          setItems(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleNext = () => {
-    setActiveIdx((prev) => (prev + 1) % TESTIMONIALS.length);
+    setActiveIdx((prev) => (prev + 1) % items.length);
   };
 
   const handlePrev = () => {
-    setActiveIdx((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
+    setActiveIdx((prev) => (prev - 1 + items.length) % items.length);
   };
 
-  const current = TESTIMONIALS[activeIdx];
+  const current = items[activeIdx] || TESTIMONIALS[0];
 
   return (
     <section className="relative py-24 bg-background overflow-hidden z-10" id="testimonials">
@@ -123,7 +138,7 @@ export default function Testimonials() {
               </span>
 
               <div className="space-y-2">
-                {TESTIMONIALS.map((test, idx) => {
+                {items.map((test, idx) => {
                   const isSelected = activeIdx === idx;
                   return (
                     <button
@@ -155,7 +170,7 @@ export default function Testimonials() {
               <div className="flex items-center gap-1.5 text-xs text-foreground-muted font-mono">
                 <span>0{activeIdx + 1}</span>
                 <span>/</span>
-                <span>0{TESTIMONIALS.length}</span>
+                <span>0{items.length}</span>
               </div>
 
               <div className="flex items-center gap-2">
